@@ -1,6 +1,12 @@
 # ece528
 University Of Michigan - Dearborn - ECE528 - Final Project by utilzing GCP services.
 
+Group member names:
+-	Sajjad Awan
+-	Shelley Porter
+-	Mohamed Aboulsaad
+
+
 Project Description:
 The Preventive Maintenance Warning in Vehicles project aims to leverage AI technology to detect potential issues in vehicles before they become major problems. By analyzing various sensor data and vehicle performance metrics, the AI system can identify patterns and anomalies that indicate the need for maintenance or repairs. This proactive approach helps vehicle owners and service providers to take timely actions, reducing breakdowns and improving overall vehicle reliability. 
 
