@@ -17,14 +17,7 @@ The Preventive Maintenance Warning in Vehicles project aims to leverage AI techn
 
 1- Data Collection and Aggregation:
 
-Dataflow (Apache Beam): We will utilize Cloud Dataflow to stream the data from Pub/Sub into a Cloud Dataflow pipeline that can ingest, process, and aggregate the sensor readings from millions of cars in real-time.
-
-Pub/Sub: We will use Cloud Pub/Sub to collect data from the cars. Each car can push its readings to a Pub/Sub topic every 5 seconds. Pub/Sub can handle large-scale real-time messaging workloads.
-
-Aggregation Logic: Given the volume, processing every reading in real-time might be overkill. We could use a windowed aggregation (e.g., average, median, or other metrics of the readings) over a set time period, like 1 minute, 5 minutes, or even an hour. This depends on how quickly we need to detect a breakdown and the characteristics of our model.
-
-
-a. Dataflow for aggregation:
+a. Dataflow (Apache Beam): We will utilize Cloud Dataflow to stream the data from Pub/Sub into a Cloud Dataflow pipeline that can ingest, process, and aggregate the sensor readings from millions of cars in real-time.
 
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
@@ -64,21 +57,37 @@ This approach ensures we can handle multiple sensors for each car.
 
 p.run()
 
-
-b. Set up Pub/Sub:
+b. Pub/Sub: We will use Cloud Pub/Sub to collect data from the cars. Each car can push its readings to a Pub/Sub topic every 5 seconds. Pub/Sub can handle large-scale real-time messaging workloads.
 
 gcloud pubsub topics create car-sensor-readings
 
 
-Store raw or aggregated data to BigQuery for historical analysis and backup.
+Aggregation Logic: Given the volume, processing every reading in real-time might be overkill. We could use a windowed aggregation (e.g., average, median, or other metrics of the readings) over a set time period, like 1 minute, 5 minutes, or even an hour. This depends on how quickly we need to detect a breakdown and the characteristics of our model.
 
-We can consider the important notes below as well:
+
+
+***We can store raw or aggregated data to BigQuery for historical analysis and backup. This is useful for refining our model in the future and understanding the patterns leading up to a breakdown
+
+Storing in BigQuery:
+
+from google.cloud import bigquery
+client = bigquery.Client()
+
+table_id = "our_PROJECT.our_DATASET.our_TABLE"
+rows_to_insert = [
+    # our aggregated data
+]
+
+errors = client.insert_rows_json(table_id, rows_to_insert) 
+
+
+***We can consider the important notes below as well:
 
 Optimize Data Transmission: Instead of sending raw sensor readings, we might want to send summarized or compressed data, especially if we're aggregating over longer windows.
 Caching: If certain repetitive patterns of data don't require inference (e.g., a car that's turned off), we can introduce caching mechanisms to skip unnecessary inferences.
 
 
--------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 2- Model Serving and Triggering Inference:
 
@@ -132,16 +141,16 @@ Then, we can serialize the PyTorch model and save it to Google Cloud Storage:
 import torch
 from google.cloud import storage
 
-# Assuming model is our trained PyTorch model
-torch.save(model.state_dict(), 'model.pth')
 
-# Upload the saved model to GCS
+torch.save(model.state_dict(), 'model.pth')   # Assuming model is our trained PyTorch model
+
+#Upload the saved model to GCS
 storage_client = storage.Client()
 bucket = storage_client.bucket("our_BUCKET_NAME")
 blob = bucket.blob("our_MODEL_DIR/model.pth")
 blob.upload_from_filename('model.pth')
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 3- Notification & Action:
 
@@ -164,7 +173,7 @@ def alert_breakdown(data, context):
     parsed_message = json.loads(message)
 
     # our logic to detect potential breakdown (maybe checking prediction values)
-    if "our_CONDITION":  # Replace with our actual condition
+    if "our_CONDITION":  # Replace with our actual condition, a few hypothetical examples of potential breakdown detection logic can be seen below
         publisher.publish(topic_path, json.dumps({"alert": "Potential Breakdown", "details": parsed_message}).encode('utf-8'))
 
 
@@ -190,7 +199,7 @@ if breakdown_probability > 0.8:  # If probability is greater than 80%
 If we're receiving time series data and want to detect a potential breakdown based on abrupt changes:
 
 
-# Assuming you're receiving a sequence of recent readings
+#Assuming you're receiving a sequence of recent readings
 sensor_readings = parsed_message.get("recent_readings", [])
 
 if len(sensor_readings) > 2 and sensor_readings[-1] - sensor_readings[-2] > threshold_value:  # sudden spike in reading
@@ -227,38 +236,18 @@ recent_anomalies = parsed_message.get("recent_anomalies", [])  # list of 0 (no a
 
 if sum(recent_anomalies[-5:]) >= 4:  # 4 or more anomalies in the last 5 readings
     publisher.publish(topic_path, json.dumps({"alert": "Consistent Anomalies Dete
----------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 4- Scaling and Performance:
 
 We can set up auto-scaling while deploying resources. For Dataflow, the number of workers can be set, and for AI Platform Prediction, we can set the machine type and auto-scaling parameters. This ensures that if there's a sudden surge in data, your services can handle it.
 
-
-
 Monitoring and Logging: Use Cloud Monitoring and Logging to keep track of your system's health, performance metrics, and potential anomalies.
 
 ---------------------------------------------------------------------------------------
 
-
-5- Storage & Analysis:
-
-BigQuery: To store aggregated and raw sensor readings in BigQuery for later analysis. This is useful for refining our model in the future and understanding the patterns leading up to a breakdown.
-
-Storing in BigQuery:
-
-from google.cloud import bigquery
-client = bigquery.Client()
-
-table_id = "our_PROJECT.our_DATASET.our_TABLE"
-rows_to_insert = [
-    # our aggregated data
-]
-
-errors = client.insert_rows_json(table_id, rows_to_insert) 
-
-----------------------------------------------------------------------------------------------------
-
-6. Visualize Data:
+5. Visualize Data:
 
 a. In BigQuery:
 
@@ -266,9 +255,7 @@ Once our data is in BigQuery, we can use BigQuery's Web UI to run SQL queries an
 
 b. After Inference:
 
-
 Google Data Studio: We can push our inference results back into BigQuery or another database and use Google Data Studio to visualize them.
-
 
 Here are the detailed steps to visualize our inference results in Google Data Studio based on our setup:
 
@@ -323,7 +310,6 @@ Following these steps should allow we to set up a comprehensive and insightful d
 --------------------------------------------------------------------------------------------------------------------------------
 
 7- Feedback Loop:
-
 
 It's important to continuously improve our model. Collect feedback when the model correctly or incorrectly predicts breakdowns. Use this feedback to retrain and refine our model regularly.
 
