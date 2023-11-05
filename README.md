@@ -1,7 +1,19 @@
 # ece528
 University Of Michigan - Dearborn - ECE528 - Final Project by utilzing GCP services.
 
-Still under developing
+Project Description:
+The Preventive Maintenance Warning in Vehicles project aims to leverage AI technology to detect potential issues in vehicles before they become major problems. By analyzing various sensor data and vehicle performance metrics, the AI system can identify patterns and anomalies that indicate the need for maintenance or repairs. This proactive approach helps vehicle owners and service providers to take timely actions, reducing breakdowns and improving overall vehicle reliability. 
+
+
+![image](https://github.com/maboulsaad82/ece528/assets/126989551/570c34f3-1a8f-401b-af5a-e543c9d31fdd)
+
+![image](https://github.com/maboulsaad82/ece528/assets/126989551/2fa0776b-26a3-465a-b7bf-958af86c022b)
+
+
+
+# Still under developing
+
+# Inference and Predection
 
 1- Data Collection and Aggregation:
 
@@ -55,7 +67,6 @@ p.run()
 
 b. Set up Pub/Sub:
 
-# Using gcloud CLI
 gcloud pubsub topics create car-sensor-readings
 
 
@@ -64,8 +75,9 @@ Store raw or aggregated data to BigQuery for historical analysis and backup.
 We can consider the important notes below as well:
 
 Optimize Data Transmission: Instead of sending raw sensor readings, we might want to send summarized or compressed data, especially if we're aggregating over longer windows.
-
 Caching: If certain repetitive patterns of data don't require inference (e.g., a car that's turned off), we can introduce caching mechanisms to skip unnecessary inferences.
+
+
 -------------------------------------------------------------
 
 2- Model Serving and Triggering Inference:
